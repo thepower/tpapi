@@ -3,7 +3,8 @@
 %%-define(DEBUG, 1).
 
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
-    mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2]).
+    mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2,
+    get_last_block/1, get_height/1]).
 
 
 %% Wait for transaction commit and get it's status
@@ -48,6 +49,22 @@ get_wallet_seq(Wallet, BaseUrl) ->
     WalletData = get_wallet_info(Wallet, BaseUrl),
     Info = maps:get(<<"info">>, WalletData, #{}),
     maps:get(<<"seq">>, Info, 0).
+
+%% -------------------------------------------------------------------------------------
+
+% get last block
+get_last_block(BaseUrl) ->
+    Query = {make_list(BaseUrl) ++ "/api/block/last", []},
+    {ok, {{_, 200, _}, _, ResBody}} =
+        httpc:request(get, Query, [], [{body_format, binary}]),
+    jsx:decode(ResBody, [return_maps]).
+
+%% -------------------------------------------------------------------------------------
+
+% get network height
+get_height(BaseUrl) ->
+    #{<<"block">> := #{<<"header">> := #{<<"height">> := Height}}} = get_last_block(BaseUrl),
+    Height.
 
 %% -------------------------------------------------------------------------------------
 
