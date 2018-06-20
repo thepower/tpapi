@@ -3,7 +3,7 @@
 %%-define(DEBUG, 1).
 
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
-    mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2]).
+    mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2]).
 
 
 %% Wait for transaction commit and get it's status
@@ -39,6 +39,15 @@ get_wallet_info(Wallet, BaseUrl) ->
     {ok, {{_, 200, _}, _, ResBody}} =
         httpc:request(get, Query, [], [{body_format, binary}]),
     jsx:decode(ResBody, [return_maps]).
+
+
+%% -------------------------------------------------------------------------------------
+
+% get wallet sequence
+get_wallet_seq(Wallet, BaseUrl) ->
+    WalletData = get_wallet_info(Wallet, BaseUrl),
+    Info = maps:get(<<"info">>, WalletData, #{}),
+    maps:get(<<"seq">>, Info, 0).
 
 %% -------------------------------------------------------------------------------------
 
