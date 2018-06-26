@@ -15,9 +15,10 @@ get_tx_status(_TxId, _BaseUrl, 0 = _Trys) ->
     {ok, timeout, _Trys};
 
 get_tx_status(TxId, BaseUrl, Try)->
-    Query = {make_list(BaseUrl) ++ "/api/tx/status/" ++ make_list(TxId), []},
-    {ok, {{_, 200, _}, _, ResBody}} = httpc:request(get, Query, [], [{body_format, binary}]),
-    Res = jsx:decode(ResBody, [return_maps]),
+    Res = make_http_request(
+        get,
+        make_list(BaseUrl) ++ "/api/tx/status/" ++ make_list(TxId)
+    ),
     Status = maps:get(<<"res">>, Res, null),
 
 %%-ifdef(DEBUG).
@@ -36,10 +37,10 @@ get_tx_status(TxId, BaseUrl, Try)->
 
 % get info for wallet
 get_wallet_info(Wallet, BaseUrl) ->
-    Query = {make_list(BaseUrl) ++ "/api/address/" ++ make_list(Wallet), []},
-    {ok, {{_, 200, _}, _, ResBody}} =
-        httpc:request(get, Query, [], [{body_format, binary}]),
-    jsx:decode(ResBody, [return_maps]).
+    make_http_request(
+        get,
+        make_list(BaseUrl) ++ "/api/address/" ++ make_list(Wallet)
+    ).
 
 
 %% -------------------------------------------------------------------------------------
@@ -54,28 +55,28 @@ get_wallet_seq(Wallet, BaseUrl) ->
 
 % get last block
 get_last_block(BaseUrl) ->
-    Query = {make_list(BaseUrl) ++ "/api/block/last", []},
-    {ok, {{_, 200, _}, _, ResBody}} =
-        httpc:request(get, Query, [], [{body_format, binary}]),
-    jsx:decode(ResBody, [return_maps]).
+    make_http_request(
+        get,
+        make_list(BaseUrl) ++ "/api/block/last"
+    ).
 
 %% -------------------------------------------------------------------------------------
 
 % get network height
 get_height(BaseUrl) ->
-    #{<<"block">> := #{<<"header">> := #{<<"height">> := Height}}} = get_last_block(BaseUrl),
+    #{<<"block">> := #{<<"header">> := #{<<"height">> := Height}}} =
+        get_last_block(BaseUrl),
     Height.
 
 %% -------------------------------------------------------------------------------------
 
 % post encoded and signed transaction using API
 commit_transaction(SignedTransaction, BaseUrl) ->
-    Body = jsx:encode(#{
-        tx=>base64:encode(SignedTransaction)
-    }),
-    Query = {make_list(BaseUrl) ++ "/api/tx/new", [], "application/json", Body},
-    {ok, {{_, 200, _}, _, ResBody}} = httpc:request(post, Query, [], [{body_format, binary}]),
-    jsx:decode(ResBody, [return_maps]).
+    make_http_request(
+        post,
+        make_list(BaseUrl) ++ "/api/tx/new",
+        #{ tx=>base64:encode(SignedTransaction) }
+    ).
 
 %% -------------------------------------------------------------------------------------
 
@@ -106,6 +107,40 @@ get_register_wallet_transaction(PubKey, Promo) ->
         timestamp => Now,
         pow => Pow
     }).
+
+
+%% -------------------------------------------------------------------------------------
+
+make_http_request(post, Url, Params) when is_list(Url) andalso is_map(Params) ->
+    RequestBody = jsx:encode(Params),
+    Query = {Url, [], "application/json", RequestBody},
+    {ok, {{_, 200, _}, _, ResponceBody}} =
+        httpc:request(post, Query, [], [{body_format, binary}]),
+    process_http_answer(ResponceBody).
+
+make_http_request(get, Url) when is_list(Url) ->
+    Query = {Url, []},
+    {ok, {{_, 200, _}, _, ResponceBody}} =
+        httpc:request(get, Query, [], [{body_format, binary}]),
+    process_http_answer(ResponceBody).
+
+process_http_answer(AnswerBody) ->
+    Answer = jsx:decode(AnswerBody, [return_maps]),
+    check_for_success(Answer),
+    Answer.
+
+check_for_success(Data) when is_map(Data) ->
+    % answers without ok are temporary assumed successfully completed
+    Success = maps:get(<<"ok">>, Data, true),
+    if
+        Success =/= true ->
+            Code = maps:get(<<"code">>, Data, 0),
+            Msg =  maps:get(<<"msg">>, Data, <<"">>),
+            throw({apierror, Code, Msg});
+        true ->
+            ok
+    end.
+
 
 %% -------------------------------------------------------------------------------------
 
