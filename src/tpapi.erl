@@ -89,8 +89,15 @@ register_wallet_by_tx(RegisterTx, BaseUrl) ->
     Res = commit_transaction(RegisterTx, BaseUrl),
     TxId = maps:get(<<"txid">>, Res, unknown),
     {ok, Status, _} = get_tx_status(TxId, BaseUrl),
-    Wallet = maps:get(<<"res">>, Status, unknown),
-    {ok, Wallet, TxId}.
+    case Status of
+        timeout ->
+            timeout;
+        Res when is_map(Res) ->
+            Wallet = maps:get(<<"res">>, Status, unknown),
+            {ok, Wallet, TxId};
+        _ ->
+            unknown
+    end.
 
 
 get_register_wallet_transaction(PubKey) ->
