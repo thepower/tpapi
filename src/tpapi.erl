@@ -93,10 +93,10 @@ register_wallet_by_tx(RegisterTx, BaseUrl) ->
         timeout ->
             timeout;
         Res when is_map(Res) ->
-            Wallet = maps:get(<<"res">>, Status, unknown),
+            Wallet = maps:get(<<"res">>, Res, unknown),
             {ok, Wallet, TxId};
         _ ->
-            unknown
+            {error, Status, TxId}
     end.
 
 
