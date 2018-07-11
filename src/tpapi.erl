@@ -92,8 +92,7 @@ register_wallet_by_tx(RegisterTx, BaseUrl) ->
     case Status of
         timeout ->
             timeout;
-        Res when is_map(Res) ->
-            Wallet = maps:get(<<"res">>, Res, unknown),
+        #{<<"res">> := Wallet} ->
             {ok, Wallet, TxId};
         _ ->
             {error, Status, TxId}
