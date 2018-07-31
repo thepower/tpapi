@@ -9,7 +9,7 @@
 
 %% Wait for transaction commit and get it's status
 get_tx_status(TxId, BaseUrl) ->
-    get_tx_status(TxId, BaseUrl, 20).
+    get_tx_status(TxId, BaseUrl, 40).
 
 get_tx_status(_TxId, _BaseUrl, 0 = _Trys) ->
     {ok, timeout, _Trys};
@@ -88,14 +88,14 @@ register_wallet(PubKey, BaseUrl) ->
 register_wallet_by_tx(RegisterTx, BaseUrl) ->
     Res = commit_transaction(RegisterTx, BaseUrl),
     TxId = maps:get(<<"txid">>, Res, unknown),
-    {ok, Status, _} = get_tx_status(TxId, BaseUrl),
-    case Status of
+    {ok, TxStatus, _} = get_tx_status(TxId, BaseUrl),
+    case TxStatus of
         timeout ->
-            timeout;
+            {error, timeout, TxId};
         #{<<"res">> := Wallet} ->
             {ok, Wallet, TxId};
         _ ->
-            {error, Status, TxId}
+            {error, TxStatus, TxId}
     end.
 
 
