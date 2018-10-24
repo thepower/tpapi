@@ -81,8 +81,8 @@ commit_transaction(SignedTransaction, BaseUrl) ->
 %% -------------------------------------------------------------------------------------
 
 % register new wallet using API
-register_wallet(PubKey, BaseUrl) ->
-  RegisterTx = get_register_wallet_transaction(PubKey),
+register_wallet(PrivKey, BaseUrl) ->
+  RegisterTx = get_register_wallet_transaction(PrivKey),
   register_wallet_by_tx(RegisterTx, BaseUrl).
 
 register_wallet_by_tx(RegisterTx, BaseUrl) ->
@@ -99,20 +99,22 @@ register_wallet_by_tx(RegisterTx, BaseUrl) ->
   end.
 
 
-get_register_wallet_transaction(PubKey) ->
-  Promo = <<"TEST5">>,
-  get_register_wallet_transaction(PubKey, Promo).
+get_register_wallet_transaction(PrivKey) ->
+  get_register_wallet_transaction(PrivKey, #{}).
 
-get_register_wallet_transaction(PubKey, Promo) ->
-  PromoBin = make_binary(Promo),
-  Now = os:system_time(second),
-  Pow = mine_sha512(<<PromoBin/binary, " ", (integer_to_binary(Now))/binary, " ">>, 0, 8),
-  tx:pack(#{
-    type => register,
-    register => PubKey,
-    timestamp => Now,
-    pow => Pow
-  }).
+get_register_wallet_transaction(PrivKey, Options) ->
+  Promo = maps:get(promo, Options, <<"TEST5">>),
+  PowDiff = maps:get(pow_diff, Options, 8),
+  PubKey = tpecdsa:calc_pub(PrivKey, true),
+  T1 = #{
+    kind => register,
+    t => os:system_time(millisecond),
+    ver => 2,
+    inv => make_binary(Promo),
+    keys => [PubKey]
+  },
+  TXConstructed = tx:sign(tx:construct_tx(T1, [{pow_diff, PowDiff}]), PrivKey),
+  tx:pack(TXConstructed).
 
 
 %% -------------------------------------------------------------------------------------
