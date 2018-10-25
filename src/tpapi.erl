@@ -22,7 +22,7 @@ get_tx_status(TxId, BaseUrl, Try) ->
   Status = maps:get(<<"res">>, Res, null),
 
 %%-ifdef(DEBUG).
-%%    io:format("got tx status: ~p ~n * raw: ~p", [Status, Res]),
+    io:format("got tx status: ~p ~n * raw: ~p", [Status, Res]),
 %%-endif.
   
   case Status of
