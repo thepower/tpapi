@@ -62,10 +62,19 @@ get_last_block(BaseUrl) ->
 
 %% -------------------------------------------------------------------------------------
 
+% get last blockinfo
+get_last_blockinfo(BaseUrl) ->
+  make_http_request(
+    get,
+    make_list(BaseUrl) ++ "/api/blockinfo/last"
+  ).
+
+%% -------------------------------------------------------------------------------------
+
 % get network height
 get_height(BaseUrl) ->
   #{<<"block">> := #{<<"header">> := #{<<"height">> := Height}}} =
-    get_last_block(BaseUrl),
+    get_last_blockinfo(BaseUrl),
   Height.
 
 %% -------------------------------------------------------------------------------------
