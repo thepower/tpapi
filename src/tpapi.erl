@@ -130,23 +130,23 @@ get_register_wallet_transaction(PrivKey, Options) ->
 
 make_http_request(post, Url, Params) when is_list(Url) andalso is_map(Params) ->
   RequestBody = jsx:encode(Params),
-  Query = {Url, [], "application/json", RequestBody},
+  Query = {Url, [{"connection", "close"}], "application/json", RequestBody},
   {ok, {{_, 200, _}, _, ResponceBody}} =
     httpc:request(
       post,
       Query,
-      [{"connection", "close"}],
+      [],
       [{body_format, binary}]
     ),
   process_http_answer(ResponceBody).
 
 make_http_request(get, Url) when is_list(Url) ->
-  Query = {Url, []},
+  Query = {Url, [{"connection", "close"}]},
   {ok, {{_, 200, _}, _, ResponceBody}} =
     httpc:request(
       get,
       Query,
-      [{"connection", "close"}],
+      [],
       [{body_format, binary}]
     ),
   process_http_answer(ResponceBody).
