@@ -132,13 +132,23 @@ make_http_request(post, Url, Params) when is_list(Url) andalso is_map(Params) ->
   RequestBody = jsx:encode(Params),
   Query = {Url, [], "application/json", RequestBody},
   {ok, {{_, 200, _}, _, ResponceBody}} =
-    httpc:request(post, Query, [], [{body_format, binary}]),
+    httpc:request(
+      post,
+      Query,
+      [{"connection", "close"}],
+      [{body_format, binary}]
+    ),
   process_http_answer(ResponceBody).
 
 make_http_request(get, Url) when is_list(Url) ->
   Query = {Url, []},
   {ok, {{_, 200, _}, _, ResponceBody}} =
-    httpc:request(get, Query, [], [{body_format, binary}]),
+    httpc:request(
+      get,
+      Query,
+      [{"connection", "close"}],
+      [{body_format, binary}]
+    ),
   process_http_answer(ResponceBody).
 
 process_http_answer(AnswerBody) ->
