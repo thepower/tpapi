@@ -172,7 +172,7 @@ check_for_success(Data) when is_map(Data) ->
 ping(BaseUrl) ->
   Res = make_http_request(
     get,
-    make_list(BaseUrl) ++ "/api/node/status"
+    make_list(BaseUrl) ++ "/api/status"
   ),
   case maps:get(<<"ok">>, Res, false) of
     false -> false;
