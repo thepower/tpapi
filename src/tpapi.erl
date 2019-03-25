@@ -4,7 +4,7 @@
 
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
   mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2,
-  get_last_block/1, get_height/1, ping/1]).
+  get_block/2, get_blockinfo/2, get_last_block/1, get_last_blockinfo/1, get_height/1, ping/1]).
 
 
 %% Wait for transaction commit and get it's status
@@ -53,21 +53,33 @@ get_wallet_seq(Wallet, BaseUrl) ->
 
 %% -------------------------------------------------------------------------------------
 
-% get last block
-get_last_block(BaseUrl) ->
+% get block contents
+get_block(Hash, BaseUrl) ->
   make_http_request(
     get,
-    make_list(BaseUrl) ++ "/api/block/last"
+    make_list(BaseUrl) ++ "/api/block/" ++ make_list(Hash)
   ).
 
 %% -------------------------------------------------------------------------------------
 
-% get last blockinfo
-get_last_blockinfo(BaseUrl) ->
+% get last block contents
+get_last_block(BaseUrl) ->
+  get_block(last, BaseUrl).
+
+%% -------------------------------------------------------------------------------------
+
+% get blockinfo for a block
+get_blockinfo(Hash, BaseUrl) ->
   make_http_request(
     get,
-    make_list(BaseUrl) ++ "/api/blockinfo/last"
+    make_list(BaseUrl) ++ "/api/blockinfo/" ++ make_list(Hash)
   ).
+
+%% -------------------------------------------------------------------------------------
+
+% get blockinfo for the last block
+get_last_blockinfo(BaseUrl) ->
+  get_blockinfo(last, BaseUrl).
 
 %% -------------------------------------------------------------------------------------
 
@@ -207,6 +219,9 @@ mine_sha512(Str, Nonce, Diff) ->
 make_binary(Arg) when is_binary(Arg) ->
   Arg;
 
+make_binary(Arg) when is_atom(Arg) ->
+  atom_to_binary(Arg, utf8);
+
 make_binary(Arg) when is_list(Arg) ->
   list_to_binary(Arg);
 
@@ -218,6 +233,9 @@ make_binary(_Arg) ->
 
 make_list(Arg) when is_list(Arg) ->
   Arg;
+
+make_list(Arg) when is_atom(Arg) ->
+  atom_to_list(Arg);
 
 make_list(Arg) when is_binary(Arg) ->
   binary_to_list(Arg);
