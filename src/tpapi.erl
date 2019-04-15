@@ -4,7 +4,8 @@
 
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
   mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2,
-  get_block/2, get_blockinfo/2, get_last_block/1, get_last_blockinfo/1, get_height/1, ping/1]).
+  get_block/2, get_blockinfo/2, get_last_block/1, get_last_blockinfo/1, get_height/1,
+  ping/1, get_settings/1]).
 
 
 %% Wait for transaction commit and get it's status
@@ -32,6 +33,16 @@ get_tx_status(TxId, BaseUrl, Try) ->
     AnyValidStatus ->
       {ok, AnyValidStatus, Try}
   end.
+
+%% -------------------------------------------------------------------------------------
+
+% get chain settings
+get_settings(BaseUrl) ->
+  make_http_request(
+    get,
+    make_list(BaseUrl) ++ "/api/settings"
+  ).
+
 
 %% -------------------------------------------------------------------------------------
 
