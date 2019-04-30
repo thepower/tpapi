@@ -1,7 +1,5 @@
 -module(tpapi).
 
-%%-define(DEBUG, 1).
-
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
   mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2,
   get_block/2, get_blockinfo/2, get_last_block/1, get_last_blockinfo/1, get_height/1,
@@ -22,9 +20,10 @@ get_tx_status(TxId, BaseUrl, Try) ->
   ),
   Status = maps:get(<<"res">>, Res, null),
 
-%%-ifdef(DEBUG).
-    io:format("got tx status: ~p ~n * raw: ~p~n", [Status, Res]),
-%%-endif.
+  case application:get_env(tpapi, "verbose", false) of
+    true -> io:format("got tx status: ~p ~n * raw: ~p~n", [Status, Res]);
+    _ -> skip
+  end,
   
   case Status of
     null ->
