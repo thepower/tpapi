@@ -159,7 +159,7 @@ make_http_request(post, Url, Params) when is_list(Url) andalso is_map(Params) ->
       post,
       Query,
       [],
-      [{body_format, binary}]
+      [{body_format, binary}, {ipv6_host_with_brackets, true}]
     ),
   process_http_answer(ResponceBody).
 
@@ -170,7 +170,7 @@ make_http_request(get, Url) when is_list(Url) ->
       get,
       Query,
       [],
-      [{body_format, binary}]
+      [{body_format, binary}, {ipv6_host_with_brackets, true}]
     ),
   process_http_answer(ResponceBody).
 
@@ -206,11 +206,6 @@ ping(BaseUrl) ->
 
 mine_sha512(Str, Nonce, Diff) ->
   DS = <<Str/binary, (integer_to_binary(Nonce))/binary>>,
-%%    if
-%%        Nonce rem 1000000 == 0 ->
-%%        io:format("nonce ~w~n",[Nonce]);
-%%        true -> ok
-%%    end,
   Act = if Diff rem 8 == 0 ->
     <<Act1:Diff/big, _/binary>> = crypto:hash(sha512, DS),
     Act1;
