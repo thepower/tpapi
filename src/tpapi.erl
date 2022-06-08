@@ -3,6 +3,7 @@
 -export([get_tx_status/2, get_tx_status/3, get_wallet_info/2, commit_transaction/2,
   mine_sha512/3, get_register_wallet_transaction/2, register_wallet/2, get_wallet_seq/2,
   get_block/2, get_blockinfo/2, get_last_block/1, get_last_blockinfo/1, get_height/1,
+  get_fullblock/2,
   ping/1, get_settings/1]).
 
 
@@ -69,6 +70,13 @@ get_block(Hash, BaseUrl) ->
     get,
     make_list(BaseUrl) ++ "/api/block/" ++ make_list(Hash)
   ).
+
+get_fullblock(Hash, BaseUrl) ->
+  block:unpack(
+  make_raw_http_request( get,
+                         make_list(BaseUrl) ++ "/api/binblock/" ++ make_list(Hash)
+                       )
+   ).
 
 %% -------------------------------------------------------------------------------------
 
@@ -163,6 +171,10 @@ make_http_request(post, Url, Params) when is_list(Url) andalso is_map(Params) ->
   process_http_answer(ResponceBody).
 
 make_http_request(get, Url) when is_list(Url) ->
+  ResponceBody=make_raw_http_request(get, Url),
+  process_http_answer(ResponceBody).
+
+make_raw_http_request(get, Url) when is_list(Url) ->
   Query = {Url, [{"connection", "close"}]},
   {ok, {{_, 200, _}, _, ResponceBody}} =
     httpc:request(
@@ -171,7 +183,8 @@ make_http_request(get, Url) when is_list(Url) ->
       [],
       [{body_format, binary}, {ipv6_host_with_brackets, true}]
     ),
-  process_http_answer(ResponceBody).
+    ResponceBody.
+
 
 process_http_answer(AnswerBody) ->
   Answer = jsx:decode(AnswerBody, [return_maps]),
